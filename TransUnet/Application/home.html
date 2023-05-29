@@ -1,0 +1,80 @@
+<!-- index.html -->
+<html>
+<head>
+  <style>
+    /* define the layout styles */
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 80%;
+      margin: auto;
+    }
+    .left {
+      width: 40%;
+    }
+    .right {
+      width: 40%;
+      text-align: center;
+    }
+    #preview {
+      width: 300px;
+      height: 300px;
+      object-fit: contain;
+    }
+    #result {
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <!-- input element for choosing image file -->
+      <input type="file" id="file" accept="image/*" onchange="loadImage(event)">
+      <!-- img element for displaying preview -->
+      <img id="preview" src="" alt="预览图片">
+    </div>
+    <div class="right">
+      <!-- div element for displaying result -->
+      <div id="result">请选择一张图片</div>
+    </div>
+  </div>
+  <script>
+    // define the function to load image
+    function loadImage(event) {
+      // get the file object
+      var file = event.target.files[0];
+      // create a file reader
+      var reader = new FileReader();
+      // define the onload event
+      reader.onload = function(e) {
+        // set the preview src to the file data
+        document.getElementById("preview").src = e.target.result;
+        // send a post request to the flask app
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/predict");
+        xhr.setRequestHeader("Content-Type", "multipart/form-data");
+        xhr.onload = function() {
+          if (xhr.status == 200) {
+            // get the response data as JSON
+            var data = JSON.parse(xhr.responseText);
+            // get the label from the data
+            var label = data['label'];
+            // set the result text to the label
+            document.getElementById("result").textContent = "预测结果：" + label;
+          }
+        };
+        // create a form data object
+        var formData = new FormData();
+        // append the file to the form data
+        formData.append("image", file);
+        // send the form data
+        xhr.send(formData);
+      };
+      // read the file as data URL
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
